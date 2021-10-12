@@ -12,13 +12,14 @@ char cmd_buffer[CMD_BUFFER_LEN];
 bool str2hex(char *str, uint16_t *val);
 int data_left;
 int data_right;
-int MotorSpeed = 150;
+int MotorSpeed = 0;
+int SensorThreshold = 1000;
 
 void setup() {
 AFMS.begin();
     pinMode(IR_sensor_left, INPUT); //initialize ldr sensor as INPUT
      pinMode(IR_sensor_right, INPUT); //initialize ldr sensor as INPUT
-    Serial.begin( 115200); //begin the serial monitor at 9600 baud
+    Serial.begin(115200); //begin the serial monitor at 9600 baud
     
 }
 
@@ -28,17 +29,17 @@ RightMotor->setSpeed(MotorSpeed);
 LeftMotor->setSpeed(MotorSpeed);
 data_left=analogRead(IR_sensor_left);
 data_right=analogRead(IR_sensor_right);
-if (data_left<900 && data_right<900){
-  RightMotor->run(FORWARD);
-  LeftMotor->run(BACKWARD);
-}
-else if (data_left>=900){
-  RightMotor->run(FORWARD);
+if (data_left<SensorThreshold && data_right<SensorThreshold){
+  RightMotor->run(BACKWARD);
   LeftMotor->run(FORWARD);
 }
-else if (data_right>=900){
+else if (data_left>=SensorThreshold){
   RightMotor->run(BACKWARD);
   LeftMotor->run(BACKWARD);
+}
+else if (data_right>=SensorThreshold){
+  RightMotor->run(FORWARD);
+  LeftMotor->run(FORWARD);
     }
     
 if (Serial.available()) {
@@ -76,6 +77,15 @@ void parse_cmd_buffer() {
   } 
   else if (strcmp(cmd_buffer, "MotorSpeed?") == 0) {
     Serial.print(MotorSpeed, HEX);
+    Serial.print("\r\n");
+  }
+  else if (strncmp(cmd_buffer, "SensorThreshold!", 16) == 0) {
+    if (str2hex(cmd_buffer + 16, &val)) {
+      SensorThreshold = val;
+    }
+  } 
+  else if (strcmp(cmd_buffer, "SensorThreshold?") == 0) {
+    Serial.print(SensorThreshold, HEX);
     Serial.print("\r\n");
   }
 }

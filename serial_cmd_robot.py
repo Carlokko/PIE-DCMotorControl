@@ -30,7 +30,7 @@ import string
 import array
 
 
-class Serial_cmd1:
+class serial_cmd:
 
     Arduino_IDs = ((0x2341, 0x0043), (0x2341, 0x0001),
                    (0x2A03, 0x0043), (0x2341, 0x0243),
@@ -42,7 +42,7 @@ class Serial_cmd1:
             self.connected = False
             devices = list_ports.comports()
             for device in devices:
-                if (device.vid, device.pid) in Serial_cmd1.Arduino_IDs:
+                if (device.vid, device.pid) in serial_cmd.Arduino_IDs:
                     try:
                         self.dev = serial.Serial(device.device, 115200)
                         self.connected = True
@@ -76,12 +76,21 @@ class Serial_cmd1:
         if self.connected:
             self.write('MotorSpeed!{:X}'.format(int(val)))
 
+    def set_sensor_Threshold(self, val):
+        if self.connected:
+            self.write('SensorThreshold!{:X}'.format(int(val)))
+
+    def get_sensor_Threshold(self):
+        if self.connected:
+            self.write('SensorThreshold?')
+            return int(self.read(), 16)
+
     def get_left_sensor(self):
         if self.connected:
             self.write('LeftSensor?')
             return int(self.read(), 16)
 
-    def get_right_snesor(self):
+    def get_right_sensor(self):
         if self.connected:
             self.write('RightSensor?')
             return int(self.read(), 16)
