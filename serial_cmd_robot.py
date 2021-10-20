@@ -26,8 +26,8 @@
 
 import serial
 import serial.tools.list_ports as list_ports
-import string
-import array
+import pandas as pd
+import time
 
 
 class serial_cmd:
@@ -76,11 +76,11 @@ class serial_cmd:
         if self.connected:
             self.write('MotorSpeed!{:X}'.format(int(val)))
 
-    def set_sensor_Threshold(self, val):
+    def set_sensor_threshold(self, val):
         if self.connected:
             self.write('SensorThreshold!{:X}'.format(int(val)))
 
-    def get_sensor_Threshold(self):
+    def get_sensor_threshold(self):
         if self.connected:
             self.write('SensorThreshold?')
             return int(self.read(), 16)
@@ -94,3 +94,26 @@ class serial_cmd:
         if self.connected:
             self.write('RightSensor?')
             return int(self.read(), 16)
+
+    def collect_reading(self):
+        if self.connected:
+            df = pd.DataFrame(
+                columns=["Speed", "Left Sensor", "Right Sensor", "RightMotorDirection", "LeftMotorDirection"])
+            starttime = time.time()
+            while (time.time()-starttime < 120):
+                self.write('MotorSpeed?')
+                speed = int(self.read(), 16)
+                self.write('LeftSensor?')
+                left = int(self.read(), 16)
+                self.write('RightSensor?')
+                right = int(self.read(), 16)
+                self.write('RightMotorDirection?')
+                RightMotorDirection = int(self.read(), 16)
+                self.write('LeftMotorDirection?')
+                LeftMotorDirection = int(self.read(), 16)
+                # newrow = [speed, left, right,
+                #         RightMotorDirection, LeftMotorDirection]
+                df.loc[len(df.index)] = [speed, left, right,
+                                         RightMotorDirection, LeftMotorDirection]
+            print(df)
+            df.to_csv('SensorAndMotor2.csv', sep=',')
